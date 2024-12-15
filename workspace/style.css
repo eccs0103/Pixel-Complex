@@ -1,0 +1,82 @@
+body {
+	position: fixed;
+	inset: 0;
+}
+
+/* Your styles goes here */
+
+body {
+	position: fixed;
+	inset: 0;
+	display: grid;
+	grid-template:
+		'menu header header' max-content
+		'menu container right-side' 1fr
+		'menu footer footer' max-content
+		/ max-content 1fr max-content;
+}
+
+input#toggle-menu + label[for="toggle-menu"] {
+	grid-area: container;
+	z-index: 1;
+	position: absolute;
+	top: 0;
+	left: 0;
+	display: flex;
+	border-style: solid solid none none;
+	border-width: var(--size-large-standart);
+}
+
+input#toggle-menu:not(:checked) ~ header {
+	display: none !important;
+}
+
+input#toggle-menu:not(:checked) ~ menu {
+	display: none !important;
+}
+
+input#toggle-menu:not(:checked) ~ footer {
+	display: none !important;
+}
+
+header {
+	grid-area: header;
+}
+
+input#upload-image + label[for="upload-image"] {
+	width: fit-content;
+	justify-content: center;
+	align-items: center;
+}
+
+menu {
+	grid-area: menu;
+}
+
+div#workspace {
+	grid-area: container;
+	display: grid;
+	position: relative;
+	justify-content: center;
+	align-items: center;
+	overflow: auto;
+}
+
+canvas#preview {
+	max-width: 100%;
+	max-height: 100%;
+	object-fit: contain;
+}
+
+footer {
+	grid-area: footer;
+	height: calc(var(--size-large-standart) * 2);
+	overflow-x: auto;
+	/* min-height: calc(var(--size-large-standart) * 1); */
+}
+
+/* End */
+
+dialog.loader img[alt="Logo"] {
+	content: url(../resources/loading.gif);
+}
