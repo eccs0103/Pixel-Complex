@@ -1,81 +1,73 @@
 body {
 	position: fixed;
 	inset: 0;
-}
-
-/* Your styles goes here */
-
-body {
-	position: fixed;
-	inset: 0;
 	display: grid;
 	grid-template:
-		'menu header header' max-content
-		'menu container right-side' 1fr
-		'menu footer footer' max-content
-		/ max-content 1fr max-content;
+		'menu-area	header-area		header-area	' max-content
+		'menu-area	container-area	aside-area	' 1fr
+		'menu-area	footer-area		footer-area	' max-content
+		/ max-content 1fr max-content
+	;
 }
 
 input#toggle-menu + label[for="toggle-menu"] {
-	grid-area: container;
+	grid-area: container-area;
 	z-index: 1;
 	position: absolute;
 	top: 0;
-	left: 0;
-	display: flex;
-	border-style: solid solid none none;
+	right: 0;
+	background-color: transparent;
+	border-style: none solid solid none;
 	border-width: var(--size-large-standart);
+	border-color: transparent var(--color-highlight);
 }
 
-input#toggle-menu:not(:checked) ~ header {
-	display: none !important;
-}
-
-input#toggle-menu:not(:checked) ~ menu {
-	display: none !important;
-}
-
-input#toggle-menu:not(:checked) ~ footer {
-	display: none !important;
+input#toggle-menu:checked + label[for="toggle-menu"] {
+	border-color: transparent var(--color-foreground);
 }
 
 header {
-	grid-area: header;
+	grid-area: header-area;
 }
 
-input#upload-image + label[for="upload-image"] {
-	width: fit-content;
-	justify-content: center;
-	align-items: center;
+input#toggle-menu:not(:checked) ~ header {
+	display: none;
+}
+
+input#toggle-menu:not(:checked) ~ menu {
+	display: none;
+}
+
+input#toggle-menu:not(:checked) ~ footer {
+	display: none;
 }
 
 menu {
-	grid-area: menu;
+	grid-area: menu-area;
+	z-index: 1;
+	box-shadow: calc(var(--size-serpator) / 4) 0 var(--size-serpator) calc(var(--size-serpator) / 4) var(--color-shadow);
+	min-width: 20vmax;
+	max-width: 30vmin;
 }
 
 div#workspace {
-	grid-area: container;
-	display: grid;
-	position: relative;
-	justify-content: center;
-	align-items: center;
-	overflow: auto;
+	grid-area: container-area;
+	overflow: hidden;
 }
 
 canvas#preview {
-	max-width: 100%;
-	max-height: 100%;
-	object-fit: contain;
+	box-shadow: 0 0 var(--size-serpator) calc(var(--size-serpator) / 4) var(--color-shadow);
 }
 
 footer {
-	grid-area: footer;
+	grid-area: footer-area;
 	height: calc(var(--size-large-standart) * 2);
-	overflow-x: auto;
-	/* min-height: calc(var(--size-large-standart) * 1); */
+	overflow: auto hidden;
 }
 
-/* End */
+button.filter img {
+	max-width: initial;
+}
 
 dialog.loader img[alt="Logo"] {
 	content: url(../resources/loading.gif);

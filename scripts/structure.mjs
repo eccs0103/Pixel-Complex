@@ -1,183 +1,109 @@
 "use strict";
 
-import { } from "./core/extensions.mjs";
-import { } from "./core/generators.mjs";
-import { } from "./core/measures.mjs";
-import { } from "./core/palette.mjs";
+import { Texture } from "./dom/palette.mjs";
 
-import { } from "./workers/extensions.mjs";
-import { } from "./workers/generators.mjs";
-import { } from "./workers/measures.mjs";
-
-import { } from "./dom/extensions.mjs";
-import { } from "./dom/generators.mjs";
-import { } from "./dom/palette.mjs";
-import { } from "./dom/storage.mjs";
-
+//#region Filter
 /**
  * @callback ModifierCallback
- * @param {ImageData} image
- * @param {(progress: Number) => void} callback
+ * @param {Texture} texture
+ * @returns {void}
  */
 
 class Filter {
+	/** @type {Map<string, Filter>} */
+	static #mapNameToFilter = new Map();
 	/**
-	 * @param {String} name 
+	 * @readonly
+	 * @returns {string[]}
+	 */
+	static get definitions() {
+		return Array.from(Filter.#mapNameToFilter, ([name]) => name);
+	}
+	/**
+	 * @param {string} name 
+	 * @returns {Filter}
+	 */
+	static find(name) {
+		return Filter.#mapNameToFilter.get(name) ?? Error.throws(`Undefined filter '${name}' name`);
+	}
+	/**
+	 * @param {string} name 
+	 * @param {ModifierCallback} modifier 
+	 * @returns {void}
+	 */
+	static define(name, modifier) {
+		const mapNameToFilter = Filter.#mapNameToFilter;
+		if (mapNameToFilter.has(name)) throw new Error(`Filter '${name}' already defined`);
+		const filter = new Filter(name, modifier);
+		mapNameToFilter.set(name, filter);
+	}
+	/**
+	 * @param {string} name 
 	 * @param {ModifierCallback} modifier 
 	 */
 	constructor(name, modifier) {
 		this.#name = name;
 		this.#modifier = modifier;
 	}
-	/** @type {String} */ #name;
-	/** @readonly */ get name() {
+	/** @type {string} */
+	#name;
+	/**
+	 * @readonly
+	 * @returns {string}
+	 */
+	get name() {
 		return this.#name;
 	}
-	/** @type {ModifierCallback} */ #modifier;
-	/** @readonly */ get modifier() {
-		return this.#modifier;
+	/** @type {ModifierCallback} */
+	#modifier;
+	/**
+	 * @param {Texture} texture 
+	 * @returns {void}
+	 */
+	apply(texture) {
+		this.#modifier.call(this, texture);
 	}
 }
+//#endregion
+//#region Filters
+Filter.define(`Grayscale`, texture => texture.grayscale());
 
-/** @enum {Filter} */ const Filters = {
-	//#region Grayscale
-	/** @readonly */
-	grayscale: new Filter(`Grayscale`, (image, callback) => {
-		const total = image.width * image.height;
-		for (let y = 0; y < image.height; y++) {
-			for (let x = 0; x < image.width; x++) {
-				const index = y * image.width + x;
-				const pixel = Color.viaRGB(image.data[index * 4], image.data[index * 4 + 1], image.data[index * 4 + 2], image.data[index * 4 + 3] / 255);
-				pixel.set(pixel.grayscale(1));
-				[image.data[index * 4], image.data[index * 4 + 1], image.data[index * 4 + 2], image.data[index * 4 + 3]] = [pixel.red, pixel.green, pixel.blue, pixel.alpha * 255];
-				callback(index / total);
-			}
-		}
-	}),
-	//#endregion
-	//#region Sepia
-	/** @readonly */
-	sepia: new Filter(`Sepia`, (image, callback) => {
-		const total = image.width * image.height;
-		for (let y = 0; y < image.height; y++) {
-			for (let x = 0; x < image.width; x++) {
-				const index = y * image.width + x;
-				const pixel = Color.viaRGB(image.data[index * 4], image.data[index * 4 + 1], image.data[index * 4 + 2], image.data[index * 4 + 3] / 255);
-				pixel.set(pixel.sepia(1));
-				[image.data[index * 4], image.data[index * 4 + 1], image.data[index * 4 + 2], image.data[index * 4 + 3]] = [pixel.red, pixel.green, pixel.blue, pixel.alpha * 255];
-				callback(index / total);
-			}
-		}
-	}),
-	//#endregion
-		//#region Red
-	/** @readonly */
-	redl: new Filter(`Red`, (image, callback) => {
-		const total = image.width * image.height;
-		for (let y = 0; y < image.height; y++) {
-			for (let x = 0; x < image.width; x++) {
-				const index = y * image.width + x;
-				const pixel = Color.viaRGB(image.data[index * 4], image.data[index * 4 + 1], image.data[index * 4 + 2], image.data[index * 4 + 3] / 255);
-				pixel.green = 0;
-				pixel.blue = 0;
-				[image.data[index * 4], image.data[index * 4 + 1], image.data[index * 4 + 2], image.data[index * 4 + 3]] = [pixel.red, pixel.green, pixel.blue, pixel.alpha * 255];
-				callback(index / total);
-			}
-		}
-	}),
-	//#endregion
-	//#region Green
-	/** @readonly */
-	green: new Filter(`Green`, (image, callback) => {
-		const total = image.width * image.height;
-		for (let y = 0; y < image.height; y++) {
-			for (let x = 0; x < image.width; x++) {
-				const index = y * image.width + x;
-				const pixel = Color.viaRGB(image.data[index * 4], image.data[index * 4 + 1], image.data[index * 4 + 2], image.data[index * 4 + 3] / 255);
-				pixel.red = 0;
-				pixel.blue = 0;
-				[image.data[index * 4], image.data[index * 4 + 1], image.data[index * 4 + 2], image.data[index * 4 + 3]] = [pixel.red, pixel.green, pixel.blue, pixel.alpha * 255];
-				callback(index / total);
-			}
-		}
-	}),
-	//#endregion
-	//#region Blue
-	/** @readonly */
-	blue: new Filter(`Blue`, (image, callback) => {
-		const total = image.width * image.height;
-		for (let y = 0; y < image.height; y++) {
-			for (let x = 0; x < image.width; x++) {
-				const index = y * image.width + x;
-				const pixel = Color.viaRGB(image.data[index * 4], image.data[index * 4 + 1], image.data[index * 4 + 2], image.data[index * 4 + 3] / 255);
-				pixel.red = 0;
-				pixel.green = 0;
-				[image.data[index * 4], image.data[index * 4 + 1], image.data[index * 4 + 2], image.data[index * 4 + 3]] = [pixel.red, pixel.green, pixel.blue, pixel.alpha * 255];
-				callback(index / total);
-			}
-		}
-	}),
-	//#endregion
-	//#region Redless
-	/** @readonly */
-	redless: new Filter(`Redless`, (image, callback) => {
-		const total = image.width * image.height;
-		for (let y = 0; y < image.height; y++) {
-			for (let x = 0; x < image.width; x++) {
-				const index = y * image.width + x;
-				const pixel = Color.viaRGB(image.data[index * 4], image.data[index * 4 + 1], image.data[index * 4 + 2], image.data[index * 4 + 3] / 255);
-				pixel.red = 0;
-				[image.data[index * 4], image.data[index * 4 + 1], image.data[index * 4 + 2], image.data[index * 4 + 3]] = [pixel.red, pixel.green, pixel.blue, pixel.alpha * 255];
-				callback(index / total);
-			}
-		}
-	}),
-	//#endregion
-	//#region Greenless
-	/** @readonly */
-	greenless: new Filter(`Greenless`, (image, callback) => {
-		const total = image.width * image.height;
-		for (let y = 0; y < image.height; y++) {
-			for (let x = 0; x < image.width; x++) {
-				const index = y * image.width + x;
-				const pixel = Color.viaRGB(image.data[index * 4], image.data[index * 4 + 1], image.data[index * 4 + 2], image.data[index * 4 + 3] / 255);
-				pixel.green = 0;
-				[image.data[index * 4], image.data[index * 4 + 1], image.data[index * 4 + 2], image.data[index * 4 + 3]] = [pixel.red, pixel.green, pixel.blue, pixel.alpha * 255];
-				callback(index / total);
-			}
-		}
-	}),
-	//#endregion
-	//#region Blueless
-	/** @readonly */
-	blueless: new Filter(`Blueless`, (image, callback) => {
-		const total = image.width * image.height;
-		for (let y = 0; y < image.height; y++) {
-			for (let x = 0; x < image.width; x++) {
-				const index = y * image.width + x;
-				const pixel = Color.viaRGB(image.data[index * 4], image.data[index * 4 + 1], image.data[index * 4 + 2], image.data[index * 4 + 3] / 255);
-				pixel.blue = 0;
-				[image.data[index * 4], image.data[index * 4 + 1], image.data[index * 4 + 2], image.data[index * 4 + 3]] = [pixel.red, pixel.green, pixel.blue, pixel.alpha * 255];
-				callback(index / total);
-			}
-		}
-	}),
-	//#endregion
-	//#region Invert
-	/** @readonly */
-	invert: new Filter(`Invert`, (image, callback) => {
-		const total = image.width * image.height;
-		for (let y = 0; y < image.height; y++) {
-			for (let x = 0; x < image.width; x++) {
-				const index = y * image.width + x;
-				const pixel = Color.viaRGB(image.data[index * 4], image.data[index * 4 + 1], image.data[index * 4 + 2], image.data[index * 4 + 3] / 255);
-				pixel.set(pixel.invert(1));
-				[image.data[index * 4], image.data[index * 4 + 1], image.data[index * 4 + 2], image.data[index * 4 + 3]] = [pixel.red, pixel.green, pixel.blue, pixel.alpha * 255];
-				callback(index / total);
-			}
-		}
-	}),
-	//#endregion
-};
+Filter.define(`Red emphasis `, texture => texture.redEmphasis());
 
-export { };
+Filter.define(`Green emphasis `, texture => texture.greenEmphasis());
+
+Filter.define(`Blue emphasis `, texture => texture.blueEmphasis());
+
+Filter.define(`Sepia`, texture => texture.sepia());
+
+Filter.define(`Red`, texture => texture.forEach((pixel) => {
+	pixel.green = 0;
+	pixel.blue = 0;
+}));
+
+Filter.define(`Green`, (texture) => texture.forEach((pixel) => {
+	pixel.red = 0;
+	pixel.blue = 0;
+}));
+
+Filter.define(`Blue`, (texture) => texture.forEach((pixel) => {
+	pixel.red = 0;
+	pixel.green = 0;
+}));
+
+Filter.define(`Redless`, (texture) => texture.forEach((pixel) => {
+	pixel.red = 0;
+}));
+
+Filter.define(`Greenless`, (texture) => texture.forEach((pixel) => {
+	pixel.green = 0;
+}));
+
+Filter.define(`Blueless`, (texture) => texture.forEach((pixel) => {
+	pixel.blue = 0;
+}));
+
+Filter.define(`Invert`, texture => texture.invert());
+//#endregion
+
+export { Filter };

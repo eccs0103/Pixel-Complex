@@ -323,10 +323,14 @@ table {
 	}
 }
 
-img {
+img,
+*.fittable {
 	max-width: 100%;
 	max-height: 100%;
 	object-fit: contain;
+}
+
+img {
 
 	&.icon,
 	&.avatar {
